@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* On s'assure que le jeu prend tout l'écran, avec un fond spatial */
+body {
+  margin: 0;
+  background-color: #050505; 
+  color: white;
+  overflow: hidden;
+}
