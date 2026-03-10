@@ -27,10 +27,15 @@ export function RulesModal({ isOpen, onClose, gameStarted, onStart }) {
     return (
       <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
         <div style={{ backgroundColor: '#131c2d', padding: '30px', border: '1px solid #253552', width: '850px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 0 30px rgba(0,0,0,0.8)', background: 'linear-gradient(135deg, #131c2d 40%, #3f1515 100%)' }}>
-          <h1 style={{ color: '#38bdf8', fontSize: '24px', textAlign: 'center', letterSpacing: '4px', marginBottom: '20px', textTransform: 'uppercase' }}>Documentation Strategique & Regles d'Engagement</h1>
+          
+          {/* Titre de la doc avec logo */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '15px', marginBottom: '20px', borderBottom: '1px solid #253552', paddingBottom: '15px' }}>
+            <img src="/cde-logo.png" alt="CDE" style={{ height: '30px', width: 'auto' }} />
+            <h1 style={{ color: '#38bdf8', fontSize: '20px', margin: 0, textAlign: 'center', letterSpacing: '3px', textTransform: 'uppercase' }}>Documentation Strategique</h1>
+          </div>
           
           <AccordionItem title="1. Philosophie et Objectifs du C2" defaultOpen={true}>
-            <p style={{ marginBottom: '10px' }}>Le War Game Spatial simule un environnement opérationnel multidomaine. Ses objectifs sont :</p>
+            <p style={{ marginBottom: '10px' }}>Le War Game Spatial simule un environnement operationnel multidomaine. Ses objectifs sont :</p>
             <ul style={{ paddingLeft: '20px', marginBottom: '10px' }}>
               <li><strong style={{ color: '#fff' }}>Apprentissage Accelere :</strong> Assimilation des mecaniques orbitales et des doctrines de reponse aux menaces.</li>
               <li><strong style={{ color: '#fff' }}>Analyse C2 (Command & Control) :</strong> Prise de decision sous contrainte de temps et de ressources (Ergol).</li>
@@ -104,8 +109,13 @@ export function RulesModal({ isOpen, onClose, gameStarted, onStart }) {
     <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
       <div style={{ backgroundColor: '#131c2d', padding: '40px', border: '1px solid #253552', width: '600px', boxShadow: '0 0 40px rgba(0,0,0,0.9)', background: 'linear-gradient(135deg, #131c2d 40%, #3f1515 100%)' }}>
         
-        <h1 style={{ color: '#fff', fontSize: '32px', textAlign: 'center', letterSpacing: '6px', marginBottom: '10px', textTransform: 'uppercase', textShadow: '0 0 10px rgba(255,255,255,0.2)' }}>WAR GAME SPATIAL</h1>
-        <p style={{ color: '#94a3b8', textAlign: 'center', fontStyle: 'italic', marginBottom: '30px', fontSize: '12px' }}>Gerez l'ergol, percez le brouillard, dominez l'orbite.</p>
+        {/* TITRE PRINCIPAL AVEC LOGO CDE CORRIGE */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', marginBottom: '10px' }}>
+          <img src="/cde-logo.png" alt="Logo CDE" style={{ height: '40px', width: 'auto' }} />
+          <h1 style={{ color: '#fff', fontSize: '32px', margin: 0, textAlign: 'center', letterSpacing: '6px', textTransform: 'uppercase', textShadow: '0 0 10px rgba(255,255,255,0.2)' }}>WAR GAME SPATIAL</h1>
+        </div>
+        
+        <p style={{ color: '#94a3b8', textAlign: 'center', fontStyle: 'italic', marginBottom: '30px', fontSize: '12px' }}>"Gerez l'ergol, percez le brouillard, dominez l'orbite."</p>
         
         {isJoining ? (
           <div style={{ textAlign: 'center', marginBottom: '30px', backgroundColor: 'rgba(0,0,0,0.5)', padding: '20px' }}>
