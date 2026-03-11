@@ -28,6 +28,17 @@ const getRealisticName = (faction, orbit, main, sub) => {
   return 'SAT';
 };
 
+// Calcule la période orbitale en heures/minutes (Loi de Kepler)
+const calculateOrbitalPeriod = (altitudeKm) => {
+  const earthRadiusKm = 6371;
+  const mu = 398600; // Constante gravitationnelle de la Terre (km^3/s^2)
+  const a = earthRadiusKm + altitudeKm; // Demie-grand axe
+  const periodSeconds = 2 * Math.PI * Math.sqrt(Math.pow(a, 3) / mu);
+  const hours = Math.floor(periodSeconds / 3600);
+  const minutes = Math.floor((periodSeconds % 3600) / 60);
+  return { a: Math.floor(a), periodText: `${hours}h ${minutes}m` };
+};
+
 export const generateFleet = () => {
   const factions = [
     { name: 'Celtica', color: '#3b82f6' },
@@ -41,35 +52,38 @@ export const generateFleet = () => {
 
   factions.forEach(faction => {
     const templates = [
-      { orbit: 'LEO', main: 'Renseignement', sub: 'Ecoute', active: true, defaultErgol: 15 },
-      { orbit: 'LEO', main: 'Renseignement', sub: 'Observation', active: true, defaultErgol: 15 },
-      { orbit: 'LEO', main: 'Télécommunications', sub: 'Civil', active: true, defaultErgol: 15 },
-      { orbit: 'LEO', main: 'Scientifique', sub: 'Bras Robotisé', active: true, defaultErgol: 15 }, // INTEGRATION BRAS ROBOTISE
-      { orbit: 'LEO', main: 'Militaire', sub: 'Protection', active: false, defaultErgol: 20 },
-      { orbit: 'LEO', main: 'Militaire', sub: 'Menace', active: false, defaultErgol: 20 },
+      { orbit: 'LEO', main: 'Renseignement', sub: 'Ecoute', type: 'Militaire', active: true, defaultErgol: 15 },
+      { orbit: 'LEO', main: 'Renseignement', sub: 'Observation', type: 'Militaire', active: true, defaultErgol: 15 },
+      { orbit: 'LEO', main: 'Télécommunications', sub: 'Civil', type: 'Civil', active: true, defaultErgol: 15 },
+      { orbit: 'LEO', main: 'Scientifique', sub: 'Bras Robotisé', type: 'Militaire', active: true, defaultErgol: 15 },
+      { orbit: 'LEO', main: 'Militaire', sub: 'Protection', type: 'Militaire', active: false, defaultErgol: 20 },
+      { orbit: 'LEO', main: 'Militaire', sub: 'Menace', type: 'Militaire', active: false, defaultErgol: 20 },
       
-      { orbit: 'MEO', main: 'GNSS', sub: 'Militaire', active: true, defaultErgol: 5 },
-      { orbit: 'MEO', main: 'Scientifique', sub: 'Recherche', active: true, defaultErgol: 15 },
+      { orbit: 'MEO', main: 'GNSS', sub: 'Militaire', type: 'Militaire', active: true, defaultErgol: 5 },
+      { orbit: 'MEO', main: 'Scientifique', sub: 'Recherche', type: 'Civil', active: true, defaultErgol: 15 },
       
-      { orbit: 'GEO', main: 'Télécommunications', sub: 'Militaire', active: true, defaultErgol: 15 },
-      { orbit: 'GEO', main: 'Scientifique', sub: 'Bras Robotisé', active: true, defaultErgol: 15 }, // INTEGRATION BRAS ROBOTISE
-      { orbit: 'GEO', main: 'Militaire', sub: 'Protection', active: false, defaultErgol: 20 },
-      { orbit: 'GEO', main: 'Militaire', sub: 'Menace', active: false, defaultErgol: 20 },
+      { orbit: 'GEO', main: 'Télécommunications', sub: 'Militaire', type: 'Militaire', active: true, defaultErgol: 15 },
+      { orbit: 'GEO', main: 'Scientifique', sub: 'Bras Robotisé', type: 'Militaire', active: true, defaultErgol: 15 },
+      { orbit: 'GEO', main: 'Militaire', sub: 'Protection', type: 'Militaire', active: false, defaultErgol: 20 },
+      { orbit: 'GEO', main: 'Militaire', sub: 'Menace', type: 'Militaire', active: false, defaultErgol: 20 },
     ];
 
     templates.forEach(t => {
+      // 2 unités de chaque
       for (let i = 0; i < 2; i++) {
         const id = `${faction.name.toLowerCase()}_${t.orbit.toLowerCase()}_${idCounter}`;
         
-        let realAltitude = 0; let speed = 0;
-        if (t.orbit === 'LEO') { realAltitude = 400 + Math.random() * 1100; speed = 0.8 + Math.random() * 0.4; }
-        if (t.orbit === 'MEO') { realAltitude = 20000 + Math.random() * 4000; speed = 0.4 + Math.random() * 0.3; }
-        if (t.orbit === 'GEO') { realAltitude = 35764 + (Math.random() * 50 - 25); speed = 0.2; }
+        let realAltitude = 0; let speed = 0; let speedKmS = 0;
+        if (t.orbit === 'LEO') { realAltitude = 400 + Math.random() * 1100; speed = 0.8 + Math.random() * 0.4; speedKmS = 7.5; }
+        if (t.orbit === 'MEO') { realAltitude = 20000 + Math.random() * 4000; speed = 0.4 + Math.random() * 0.3; speedKmS = 3.8; }
+        if (t.orbit === 'GEO') { realAltitude = 35764; speed = 0.2; speedKmS = 3.0; }
 
+        const orbitalData = calculateOrbitalPeriod(realAltitude);
         const radius3D = altitudeTo3D(realAltitude);
         const baseName = getRealisticName(faction.name, t.orbit, t.main, t.sub);
         const serialNumber = Math.floor(Math.random() * 900) + 10;
 
+        // Règle d'avantage Mercure
         let isActive = t.active;
         if (faction.name === 'Mercure' && t.main === 'Militaire' && !mercureMilitaireDeployed) {
           isActive = true; mercureMilitaireDeployed = true;
@@ -77,17 +91,33 @@ export const generateFleet = () => {
 
         fleet[id] = {
           id: id, 
-          noradId: `NORAD-${Math.floor(Math.random() * 80000) + 10000}`, // Ajout d'un ID de suivi
           name: `${baseName}-${serialNumber}`, 
           owner: faction.name, 
           color: faction.color,
           orbit: t.orbit, 
           realAltitudeKm: realAltitude,
-          radius: radius3D, currentRadius: radius3D, inclination: (Math.random() * 45) * (Math.PI / 180), startAngle: Math.random() * Math.PI * 2, speed: speed, 
-          mainMission: t.main, secondaryMission: t.sub, isActive: isActive, 
-          status: isActive ? "Opérationnel" : "Hangar", 
+          semiMajorAxis: orbitalData.a,
+          orbitalPeriod: orbitalData.periodText,
+          realSpeedKmS: speedKmS,
+          radius: radius3D, 
+          currentRadius: radius3D, 
+          inclination: (Math.random() * 45) * (Math.PI / 180), 
+          startAngle: Math.random() * Math.PI * 2, 
+          speed: speed, 
+          mainMission: t.main, 
+          secondaryMission: t.sub, 
+          typeDomain: t.type, // Civil / Militaire
+          isActive: isActive, 
+          etat: isActive ? "Opérationnel" : "Non Opérationnel", 
+          statut: "-", // En RPO, Brouillé, etc.
           canRPO: t.main === 'Militaire' || t.main === 'Renseignement' || t.sub === 'Bras Robotisé',
-          ergol: t.defaultErgol, task: null, jammedBy: null, isRPO: false, targetId: null
+          hasRoboticArm: t.sub === 'Bras Robotisé',
+          ergol: t.defaultErgol, 
+          maxErgol: t.defaultErgol,
+          task: null, 
+          jammedBy: null, 
+          isRPO: false, 
+          targetId: null
         };
         idCounter++;
       }
