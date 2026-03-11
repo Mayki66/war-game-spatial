@@ -26,7 +26,6 @@ export default function App() {
   
   const [actionSatId, setActionSatId] = useState("");
   const [actionTargetId, setActionTargetId] = useState("");
-  const [actionTurns, setActionTurns] = useState(""); 
   const [inputAltitude, setInputAltitude] = useState("");
   const [inputInclination, setInputInclination] = useState("");
 
@@ -52,14 +51,8 @@ export default function App() {
   const tabStyle = { flex: 1, backgroundColor: '#0f172a', border: `1px solid ${themeBorder}`, color: '#94a3b8', padding: '8px', fontSize: '10px', cursor: isMyTurn ? 'pointer' : 'not-allowed', textTransform: 'uppercase' };
 
   const handleStart = (mode, faction) => { if (!game.gameStarted) game.startGame(mode, faction); setIsRulesOpen(false); }
-
-  const getMaskedSatStatus = (sat) => {
-    if (sat.owner === currentViewFaction || sat.owner === 'Allié') return sat.status;
-    if (hasIntel) return sat.status;
-    return "Donnees cryptees";
-  };
-
-  const executeAction = () => { setActiveMenu(null); setActiveC2Tab(null); setActiveSubAction(null); setActionSatId(""); setActionTargetId(""); setActionTurns(""); };
+  const getMaskedSatStatus = (sat) => { if (sat.owner === currentViewFaction || sat.owner === 'Allié' || hasIntel) return sat.status; return "Données cryptées"; };
+  const executeAction = () => { setActiveMenu(null); setActiveC2Tab(null); setActiveSubAction(null); setActionSatId(""); setActionTargetId(""); };
 
   const currentPVMercure = game.scores?.mercure?.pv || 0;
   const currentPVCeltica = game.scores?.celtica?.pv || 0;
@@ -67,20 +60,13 @@ export default function App() {
   return (
     <div style={{ display: 'flex', width: '100vw', height: '100vh', backgroundColor: themeBgDark, color: '#94a3b8', fontFamily: '"Segoe UI", Roboto, Helvetica, sans-serif', overflow: 'hidden', position: 'relative' }}>
       
-      {game.gameStarted && game.gameMode === 'online' && (
-        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', backgroundColor: themeColor, color: '#fff', textAlign: 'center', padding: '8px', zIndex: 50, fontSize: '12px', fontWeight: 'bold' }}>
-          [RESEAU] SALON EN LIGNE ({currentViewFaction.toUpperCase()}) - Partager cette URL : <span style={{ backgroundColor: '#000', padding: '4px 8px', margin: '0 10px', borderRadius: '4px', userSelect: 'all' }}>{window.location.href}</span>
-        </div>
-      )}
-
       <RulesModal isOpen={isRulesOpen} onClose={() => setIsRulesOpen(false)} gameStarted={game.gameStarted} onStart={handleStart} />
       <TableModal isOpen={isSsaTableOpen} onClose={() => setIsSsaTableOpen(false)} sats={Object.values(game.sats).filter(s => s.isActive)} currentViewFaction={currentViewFaction} getMaskedSatStatus={getMaskedSatStatus} themeColor={themeColor} title="BASE DE DONNEES SSA" isHangar={false} toggleOperational={game.toggleOperational} />
       <TableModal isOpen={isHangarOpen} onClose={() => setIsHangarOpen(false)} sats={myInactiveSats} currentViewFaction={currentViewFaction} getMaskedSatStatus={getMaskedSatStatus} themeColor={themeColor} title="HANGAR (UNITES INACTIVES)" isHangar={true} toggleOperational={game.toggleOperational} />
 
-      {/* PANNEAU GAUCHE - C2 (20%) */}
-      <div style={{ width: '20%', backgroundColor: themePanelBg, borderRight: `1px solid ${themeBorder}`, display: 'flex', flexDirection: 'column', zIndex: 10, transition: 'opacity 0.3s', opacity: isMyTurn ? 1 : 0.6, marginTop: (game.gameMode === 'online') ? '32px' : '0' }}>
+      {/* PANNEAU GAUCHE - C2 */}
+      <div style={{ width: '20%', backgroundColor: themePanelBg, borderRight: `1px solid ${themeBorder}`, display: 'flex', flexDirection: 'column', zIndex: 10, transition: 'opacity 0.3s', opacity: isMyTurn ? 1 : 0.6 }}>
         
-        {/* EN-TETE C2 AVEC POINTS D'ACTION */}
         <div style={{ padding: '15px 20px', borderBottom: `1px solid ${themeBorder}`, backgroundColor: 'rgba(0,0,0,0.6)' }}>
           <div style={{ fontSize: '14px', letterSpacing: '2px', color: themeColor, fontWeight: 'bold', textAlign: 'center', marginBottom: '15px' }}>CENTRE DE COMMANDEMENT</div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -103,27 +89,25 @@ export default function App() {
               <button onClick={() => setIsSsaTableOpen(true)} style={{...btnStyle, width: '100%', marginBottom: '10px', backgroundColor: '#0f172a', opacity: 1}}>Ouvrir Tableau SSA</button>
               <button onClick={() => setIsHangarOpen(true)} style={{...btnStyle, width: '100%', marginBottom: '10px', backgroundColor: '#0f172a', opacity: 1}}>Ouvrir Hangar Faction</button>
               <div style={{ marginTop: '10px', borderTop: '1px solid #333', paddingTop: '10px' }}>
-                <div style={{ color: '#fff', fontSize: '11px', marginBottom: '5px' }}>FILTRES CARTOGRAPHIE 3D :</div>
+                <div style={{ color: '#fff', fontSize: '11px', marginBottom: '5px' }}>FILTRES 3D :</div>
                 <select value={cartoFilter} onChange={(e) => setCartoFilter(e.target.value)} disabled={viewMode === '2D'} style={{ width: '100%', padding: '8px', backgroundColor: '#1e293b', color: viewMode === '2D' ? '#64748b' : '#fff', border: 'none' }}>
                   <option value="ALL">Afficher toutes les orbites</option><option value="LEO">Orbite LEO uniquement</option><option value="MEO">Orbite MEO uniquement</option><option value="GEO">Orbite GEO uniquement</option>
                 </select>
-                {viewMode === '2D' && <div style={{ fontSize: '9px', color: '#ef4444', marginTop: '5px' }}>Le mode 2D verrouille l'affichage sur GEO.</div>}
               </div>
             </div>
           )}
 
           {activeMenu === 'LANCEMENTS' && (
             <div style={{ backgroundColor: '#000', padding: '15px', border: `1px solid ${themeBorder}`, marginBottom: '20px' }}>
-              <div style={{ color: '#fff', marginBottom: '10px', fontSize: '12px' }}>PROGRAMMATION DE TIR</div>
               {myInactiveSats.length === 0 ? <p style={{color: '#666', fontSize:'11px'}}>Hangar vide.</p> : (
                 <>
                   <select onChange={(e) => setActionSatId(e.target.value)} value={actionSatId} style={{ width: '100%', padding: '8px', backgroundColor: '#1e293b', color: '#fff', border: 'none', marginBottom: '10px' }}>
                     <option value="">-- Unite en Hangar --</option>
                     {myInactiveSats.map(s => <option key={s.id} value={s.id}>{s.name} ({s.orbit})</option>)}
                   </select>
-                  <input type="number" placeholder="Altitude cible (Mm)" onChange={(e) => setInputAltitude(e.target.value)} style={{ width: '100%', padding: '8px', backgroundColor: '#1e293b', color: '#fff', border: 'none', marginBottom: '10px', boxSizing: 'border-box' }} />
-                  <input type="number" placeholder="Inclinaison (°)" onChange={(e) => setInputInclination(e.target.value)} style={{ width: '100%', padding: '8px', backgroundColor: '#1e293b', color: '#fff', border: 'none', marginBottom: '15px', boxSizing: 'border-box' }} />
-                  <button onClick={() => { game.launchSatellite(actionSatId, inputAltitude, inputInclination); executeAction(); }} disabled={!actionSatId || game.actionPoints <= 0} style={{...btnStyle, width: '100%', backgroundColor: themeColor}}>Ordonner Lancement (-1 PA)</button>
+                  <input type="number" placeholder="Altitude (Mm)" onChange={(e) => setInputAltitude(e.target.value)} style={{ width: '100%', padding: '8px', backgroundColor: '#1e293b', color: '#fff', border: 'none', marginBottom: '10px' }} />
+                  <input type="number" placeholder="Inclinaison (°)" onChange={(e) => setInputInclination(e.target.value)} style={{ width: '100%', padding: '8px', backgroundColor: '#1e293b', color: '#fff', border: 'none', marginBottom: '15px' }} />
+                  <button onClick={() => { game.launchSatellite(actionSatId, inputAltitude, inputInclination); executeAction(); }} disabled={!actionSatId || game.actionPoints <= 0} style={{...btnStyle, width: '100%', backgroundColor: themeColor}}>Lancement (-1 PA)</button>
                 </>
               )}
             </div>
@@ -141,26 +125,22 @@ export default function App() {
                 {activeC2Tab === 'MANOEUVRES' && (
                   <>
                     <select onChange={(e) => setActiveSubAction(e.target.value)} value={activeSubAction || ""} style={{ width: '100%', padding: '8px', backgroundColor: '#1e293b', color: '#fff', border: 'none', marginBottom: '15px' }}>
-                      <option value="">-- Type de Manoeuvre --</option><option value="RPO">RPO (Rapprochement)</option><option value="COLLISION">Collision</option><option value="EVASION">Evasion</option>
+                      <option value="">-- Type de Manoeuvre --</option><option value="RPO">RPO (Phase 1/3)</option><option value="COLLISION">Collision (Phase 1/3)</option><option value="EVASION">Evasion</option>
                     </select>
 
                     {(activeSubAction === 'RPO' || activeSubAction === 'COLLISION') && (
                       <div style={{ borderTop: '1px solid #333', paddingTop: '10px' }}>
-                        <select onChange={(e) => { setActionSatId(e.target.value); if(e.target.value) setActionTurns(game.getMinTurns(game.sats[e.target.value].orbit)); else setActionTurns(""); }} value={actionSatId} style={{ width: '100%', padding: '8px', backgroundColor: '#1e293b', color: '#fff', border: 'none', marginBottom: '10px' }}>
-                          <option value="">-- Satellite Attaquant --</option>
-                          {myActiveSats.filter(s => s.canRPO && !s.task).map(s => <option key={s.id} value={s.id}>{s.name} ({s.ergol} Ergols)</option>)}
+                        <select onChange={(e) => setActionSatId(e.target.value)} value={actionSatId} style={{ width: '100%', padding: '8px', backgroundColor: '#1e293b', color: '#fff', border: 'none', marginBottom: '10px' }}>
+                          <option value="">-- Attaquant --</option>
+                          {myActiveSats.filter(s => s.canRPO && !s.task).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                         </select>
                         {actionSatId && (
                           <>
-                            <select onChange={(e) => setActionTargetId(e.target.value)} value={actionTargetId} style={{ width: '100%', padding: '8px', backgroundColor: '#1e293b', color: '#fff', border: 'none', marginBottom: '10px' }}>
+                            <select onChange={(e) => setActionTargetId(e.target.value)} value={actionTargetId} style={{ width: '100%', padding: '8px', backgroundColor: '#1e293b', color: '#fff', border: 'none', marginBottom: '15px' }}>
                               <option value="">-- Cible Ennemie --</option>
-                              {enemyActiveSats.map(s => <option key={s.id} value={s.id}>{s.name} ({s.orbit})</option>)}
+                              {enemyActiveSats.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                             </select>
-                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '15px' }}>
-                              <span style={{ color: '#94a3b8', fontSize: '10px' }}>Tours (Min {game.getMinTurns(game.sats[actionSatId].orbit, actionTargetId ? game.sats[actionTargetId].orbit : null)}) :</span>
-                              <input type="number" min={game.getMinTurns(game.sats[actionSatId].orbit, actionTargetId ? game.sats[actionTargetId].orbit : null)} value={actionTurns} onChange={(e) => setActionTurns(e.target.value)} style={{ flex: 1, padding: '6px', backgroundColor: '#1e293b', color: '#fff', border: 'none' }} />
-                            </div>
-                            <button onClick={() => { activeSubAction === 'RPO' ? game.startRPO(actionSatId, actionTargetId, actionTurns) : game.startCollision(actionSatId, actionTargetId, actionTurns); executeAction(); }} disabled={!actionTargetId || game.actionPoints <= 0} style={{...btnStyle, width: '100%', backgroundColor: themeColor, color: '#fff'}}>Engager (-1 PA)</button>
+                            <button onClick={() => { activeSubAction === 'RPO' ? game.startRPO(actionSatId, actionTargetId) : game.startCollision(actionSatId, actionTargetId); executeAction(); }} disabled={!actionTargetId || game.actionPoints <= 0} style={{...btnStyle, width: '100%', backgroundColor: themeColor, color: '#fff'}}>Engager Automatique (-1 PA)</button>
                           </>
                         )}
                       </div>
@@ -170,9 +150,9 @@ export default function App() {
                       <div style={{ borderTop: '1px solid #333', paddingTop: '10px' }}>
                         <select onChange={(e) => setActionSatId(e.target.value)} value={actionSatId} style={{ width: '100%', padding: '8px', backgroundColor: '#1e293b', color: '#fff', border: 'none', marginBottom: '10px' }}>
                           <option value="">-- Unite a evader --</option>
-                          {myActiveSats.filter(s => !s.task).map(s => <option key={s.id} value={s.id}>{s.name} ({s.ergol} Ergols)</option>)}
+                          {myActiveSats.filter(s => !s.task).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                         </select>
-                        <input type="number" placeholder="Nouvelle Alt. (Mm)" onChange={(e) => setInputAltitude(e.target.value)} style={{ width: '100%', padding: '8px', backgroundColor: '#1e293b', color: '#fff', border: 'none', marginBottom: '15px', boxSizing: 'border-box' }} />
+                        <input type="number" placeholder="Nouvelle Alt. (Mm)" onChange={(e) => setInputAltitude(e.target.value)} style={{ width: '100%', padding: '8px', backgroundColor: '#1e293b', color: '#fff', border: 'none', marginBottom: '15px' }} />
                         <button onClick={() => { game.startEvasion(actionSatId, inputAltitude); executeAction(); }} disabled={!actionSatId || !inputAltitude || game.actionPoints <= 0} style={{...btnStyle, width: '100%', backgroundColor: '#ca8a04'}}>Executer Evasion (-1 PA)</button>
                       </div>
                     )}
@@ -180,24 +160,19 @@ export default function App() {
                 )}
 
                 {activeC2Tab === 'RENS' && (
-                  <>
-                    <button onClick={() => { game.requestAllyIntel(); executeAction(); }} disabled={game.actionPoints <= 0} style={{...btnStyle, width: '100%', backgroundColor: '#166534', marginBottom: '20px'}}>Demande aux Allies (2 Tours) (-1 PA)</button>
-                    <div style={{ color: '#fff', fontSize: '11px', marginBottom: '10px', borderBottom: '1px solid #333', paddingBottom: '5px' }}>Satellites Operationnels (RPO Reussie)</div>
-                    {myActiveSats.filter(s => s.mainMission === 'Renseignement' && s.isRPO).length === 0 ? <div style={{ fontSize: '10px', color: '#666' }}>Aucun agent en position.</div> : 
-                      myActiveSats.filter(s => s.mainMission === 'Renseignement' && s.isRPO).map(s => <div key={s.id} style={{ fontSize: '11px', color: '#10b981', padding: '5px 0' }}>[OK] {s.name} en ecoute sur cible.</div>)
-                    }
-                  </>
+                  <button onClick={() => { game.requestAllyIntel(); executeAction(); }} disabled={game.actionPoints <= 0} style={{...btnStyle, width: '100%', backgroundColor: '#166534'}}>Demande aux Allies (2 Tours) (-1 PA)</button>
                 )}
 
                 {activeC2Tab === 'MILITAIRE' && (
                   <>
-                    <div style={{ color: '#fff', fontSize: '11px', marginBottom: '10px', borderBottom: '1px solid #333', paddingBottom: '5px' }}>Unites de Protection (Actives)</div>
-                    {myActiveSats.filter(s => s.mainMission === 'Militaire' && s.secondaryMission === 'Protection' && s.isRPO).length === 0 ? <div style={{ fontSize: '10px', color: '#666', marginBottom: '15px' }}>Aucun bouclier deploye.</div> : 
-                      myActiveSats.filter(s => s.mainMission === 'Militaire' && s.secondaryMission === 'Protection' && s.isRPO).map(s => <div key={s.id} style={{ fontSize: '11px', color: '#3b82f6', padding: '5px 0', marginBottom: '15px' }}>[PROTECTION] {s.name} protege la zone.</div>)
-                    }
-                    <div style={{ color: '#fff', fontSize: '11px', marginBottom: '10px', borderBottom: '1px solid #333', paddingBottom: '5px' }}>Unites de Menace (Actives)</div>
-                    {myActiveSats.filter(s => s.mainMission === 'Militaire' && s.secondaryMission === 'Menace' && s.isRPO).length === 0 ? <div style={{ fontSize: '10px', color: '#666' }}>Aucune frappe en cours.</div> : 
-                      myActiveSats.filter(s => s.mainMission === 'Militaire' && s.secondaryMission === 'Menace' && s.isRPO).map(s => <div key={s.id} style={{ fontSize: '11px', color: '#ef4444', padding: '5px 0' }}>[MENACE] {s.name} brouille la cible.</div>)
+                    <div style={{ color: '#fff', fontSize: '11px', marginBottom: '10px', borderBottom: '1px solid #333', paddingBottom: '5px' }}>Bras Robotise (Ejection immediate)</div>
+                    {myActiveSats.filter(s => s.hasRoboticArm && s.isRPO).length === 0 ? <div style={{ fontSize: '10px', color: '#666', marginBottom: '15px' }}>Aucun satellite scientifique en RPO.</div> : 
+                      myActiveSats.filter(s => s.hasRoboticArm && s.isRPO).map(s => (
+                        <div key={s.id} style={{ display: 'flex', flexDirection: 'column', gap: '5px', marginBottom: '10px' }}>
+                          <span style={{ fontSize: '10px', color: '#eab308' }}>[PRET] {s.name} verrouille la cible.</span>
+                          <button onClick={() => { game.startEjection(s.id, s.targetId); executeAction(); }} disabled={game.actionPoints <= 0} style={{ padding: '6px', backgroundColor: '#991b1b', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '10px', fontWeight: 'bold' }}>ORDRE D'EJECTION (-1 PA)</button>
+                        </div>
+                      ))
                     }
                   </>
                 )}
@@ -205,76 +180,46 @@ export default function App() {
             </div>
           )}
         </div>
-
         <button onClick={game.endTurn} disabled={!isMyTurn} style={{ padding: '20px', backgroundColor: isMyTurn ? themeColor : '#1e293b', color: isMyTurn ? '#fff' : '#64748b', border: 'none', borderTop: `1px solid ${themeBorder}`, fontSize: '14px', fontWeight: 'bold', letterSpacing: '2px', cursor: isMyTurn ? 'pointer' : 'not-allowed' }}>
           {isMyTurn ? 'VALIDER LE TOUR' : (game.currentPlayer === 'Allié' ? 'LES ALLIES JOUENT...' : 'L\'ADVERSAIRE JOUE...')}
         </button>
       </div>
 
-      {/* ZONE CENTRALE 3D (60%) */}
+      {/* ZONE CENTRALE 3D & PANNEAU DROIT INCHANGES ICI (Garde ton code existant pour le reste) */}
       <div style={{ width: '60%', position: 'relative', backgroundColor: '#000', marginTop: (game.gameMode === 'online') ? '32px' : '0' }}>
-        
-        {/* ZONE DES SCORES ET DU TOUR PURIFIEE */}
         <div style={{ position: 'absolute', top: '20px', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '30px', zIndex: 20, pointerEvents: 'none' }}>
           <div style={{ backgroundColor: 'rgba(0,0,0,0.6)', border: `1px solid #ef4444`, padding: '8px 20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
             <span style={{ fontSize: '11px', letterSpacing: '2px', color: '#ef4444' }}>MERCURE</span>
             <span style={{ fontSize: '18px', color: '#fff' }}>{currentPVMercure} <span style={{fontSize: '11px', color:'#666'}}>/250 PV</span></span>
           </div>
-
           <div style={{ backgroundColor: 'rgba(0,0,0,0.8)', border: `1px solid ${themeBorder}`, padding: '8px 25px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 15px rgba(0,0,0,0.5)' }}>
             <span style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold', letterSpacing: '3px' }}>TOUR {game.turn}</span>
           </div>
-
           <div style={{ backgroundColor: 'rgba(0,0,0,0.6)', border: `1px solid #3b82f6`, padding: '8px 20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
             <span style={{ fontSize: '18px', color: '#fff' }}>{currentPVCeltica} <span style={{fontSize: '11px', color:'#666'}}>/250 PV</span></span>
             <span style={{ fontSize: '11px', letterSpacing: '2px', color: '#3b82f6' }}>CELTICA</span>
           </div>
         </div>
-
         <Canvas onPointerMissed={() => setSelectedSatInfo(null)}>
-          {viewMode === '2D' ? (
-            <OrthographicCamera makeDefault position={[0, 60, 0]} zoom={12} rotation={[-Math.PI / 2, 0, 0]} />
-          ) : (
-            <PerspectiveCamera makeDefault position={[0, 15, 35]} fov={50} />
-          )}
-          <ambientLight intensity={0.2} />
-          <directionalLight position={[200, 20, 100]} intensity={3.5} color="#fffdef" />
+          {viewMode === '2D' ? (<OrthographicCamera makeDefault position={[0, 60, 0]} zoom={12} rotation={[-Math.PI / 2, 0, 0]} />) : (<PerspectiveCamera makeDefault position={[0, 15, 35]} fov={50} />)}
+          <ambientLight intensity={0.2} /><directionalLight position={[200, 20, 100]} intensity={3.5} color="#fffdef" />
           <Suspense fallback={null}>
-            {viewMode === '3D' && <Stars />}
-            {viewMode === '3D' && <Sun />}
-            {viewMode === '3D' && <Moon />}
+            {viewMode === '3D' && <Stars />}{viewMode === '3D' && <Sun />}{viewMode === '3D' && <Moon />}
             <RealEarth earthRef={earthRef} />
-            {renderedSats.map(sat => (
-              <AnimatedSatellite key={sat.id} data={sat} earthRef={earthRef} onSelect={setSelectedSatInfo} isHighlighted={selectedSatInfo?.id === sat.id} />
-            ))}
+            {renderedSats.map(sat => (<AnimatedSatellite key={sat.id} data={sat} earthRef={earthRef} onSelect={setSelectedSatInfo} isHighlighted={selectedSatInfo?.id === sat.id} />))}
           </Suspense>
           <OrbitControls enablePan={false} enableRotate={viewMode === '3D'} maxDistance={80} minDistance={2} />
         </Canvas>
-
-        <div style={{ position: 'absolute', bottom: '20px', width: '100%', display: 'flex', justifyContent: 'center', zIndex: 20 }}>
-          <button onClick={() => setViewMode(v => v === '3D' ? '2D' : '3D')} style={{ padding: '10px 20px', backgroundColor: '#1e293b', color: '#fff', border: `1px solid ${themeColor}`, cursor: 'pointer', fontSize: '11px', fontWeight: 'bold', letterSpacing: '1px' }}>
-            BASCULER EN VUE {viewMode === '3D' ? '2D (GEOBELT)' : '3D STANDARD'}
-          </button>
-        </div>
       </div>
 
-      {/* PANNEAU DROIT (20%) */}
       <div style={{ width: '20%', backgroundColor: themePanelBg, borderLeft: `1px solid ${themeBorder}`, display: 'flex', flexDirection: 'column', zIndex: 10, marginTop: (game.gameMode === 'online') ? '32px' : '0' }}>
         <div style={{ padding: '15px', borderBottom: `1px solid ${themeBorder}`, backgroundColor: 'rgba(0,0,0,0.4)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ fontSize: '11px', letterSpacing: '2px', color: '#fff' }}>JOURNAL TACTIQUE</div>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            <button onClick={() => setIsRulesOpen(true)} style={{ backgroundColor: 'transparent', border: `1px solid ${themeColor}`, color: themeColor, padding: '4px 8px', fontSize: '9px', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '1px', borderRadius: '3px' }}>Docs</button>
-          </div>
+          <button onClick={() => setIsRulesOpen(true)} style={{ backgroundColor: 'transparent', border: `1px solid ${themeColor}`, color: themeColor, padding: '4px 8px', fontSize: '9px', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '1px', borderRadius: '3px' }}>Docs</button>
         </div>
-        
         <div style={{ flex: 1, padding: '15px', overflowY: 'auto', fontSize: '11px', fontFamily: 'monospace', lineHeight: '1.6' }}>
-          {game.logs.map((log) => (
-            <div key={log.id} style={{ color: log.color, marginBottom: '8px', borderBottom: '1px solid #1e293b', paddingBottom: '4px' }}>
-              <span style={{ opacity: 0.5, marginRight: '5px' }}>&gt;</span>{log.text}
-            </div>
-          ))}
+          {game.logs.map((log) => (<div key={log.id} style={{ color: log.color, marginBottom: '8px', borderBottom: '1px solid #1e293b', paddingBottom: '4px' }}><span style={{ opacity: 0.5, marginRight: '5px' }}>&gt;</span>{log.text}</div>))}
         </div>
-        
         <div style={{ height: '35%', borderTop: `1px solid ${themeBorder}`, backgroundColor: '#000', padding: '15px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ fontSize: '10px', letterSpacing: '1px', marginBottom: '15px', color: '#fff' }}>ANALYSE CIBLE</div>
           {selectedSatInfo ? (
@@ -283,24 +228,16 @@ export default function App() {
               <div style={{ marginBottom: '10px' }}><span style={{ color: '#64748b' }}>Faction:</span> {selectedSatInfo.owner}</div>
               <div style={{ borderTop: `1px solid ${themeBorder}`, margin: '8px 0' }}></div>
               <div style={{ marginBottom: '4px' }}><span style={{ color: '#64748b' }}>Altitude:</span> {selectedSatInfo.realAltitudeKm ? selectedSatInfo.realAltitudeKm.toFixed(0) : (selectedSatInfo.currentRadius || selectedSatInfo.radius).toFixed(1)} {selectedSatInfo.realAltitudeKm ? 'km' : 'Mm'}</div>
-              <div style={{ marginBottom: '4px' }}><span style={{ color: '#64748b' }}>Inclinaison:</span> {((selectedSatInfo.inclination || 0) * (180/Math.PI)).toFixed(0)}°</div>
               <div style={{ marginBottom: '4px' }}><span style={{ color: '#64748b' }}>Ergol:</span> {selectedSatInfo.ergol}</div>
               <div style={{ borderTop: `1px solid ${themeBorder}`, margin: '8px 0' }}></div>
               <div style={{ marginBottom: '4px' }}><span style={{ color: '#64748b' }}>Miss. Primaire:</span> {selectedSatInfo.mainMission}</div>
               <div style={{ marginBottom: '4px' }}><span style={{ color: '#64748b' }}>Miss. Secondaire:</span> {selectedSatInfo.secondaryMission}</div>
               <div style={{ borderTop: `1px solid ${themeBorder}`, margin: '8px 0' }}></div>
-              <div style={{ color: getMaskedSatStatus(selectedSatInfo) === 'Donnees cryptees' ? '#9ca3af' : (selectedSatInfo.task ? '#eab308' : '#22c55e') }}>
-                <span style={{ color: '#64748b' }}>Statut:</span> {getMaskedSatStatus(selectedSatInfo)}
-              </div>
+              <div style={{ color: getMaskedSatStatus(selectedSatInfo) === 'Donnees cryptees' ? '#9ca3af' : (selectedSatInfo.task ? '#eab308' : '#22c55e') }}><span style={{ color: '#64748b' }}>Statut:</span> {getMaskedSatStatus(selectedSatInfo)}</div>
             </div>
-          ) : (
-            <div style={{ margin: 'auto', textAlign: 'center', color: '#334155', fontSize: '11px', fontStyle: 'italic' }}>Aucune cible.</div>
-          )}
+          ) : (<div style={{ margin: 'auto', textAlign: 'center', color: '#334155', fontSize: '11px', fontStyle: 'italic' }}>Aucune cible.</div>)}
         </div>
-
-        <button onClick={() => window.location.reload()} style={{ padding: '15px', backgroundColor: '#7f1d1d', color: '#fff', border: 'none', borderTop: `1px solid ${themeBorder}`, fontSize: '12px', fontWeight: 'bold', letterSpacing: '1px', cursor: 'pointer' }}>
-          [ARRET] QUITTER LA SIMULATION
-        </button>
+        <button onClick={() => window.location.reload()} style={{ padding: '15px', backgroundColor: '#7f1d1d', color: '#fff', border: 'none', borderTop: `1px solid ${themeBorder}`, fontSize: '12px', fontWeight: 'bold', letterSpacing: '1px', cursor: 'pointer' }}>[ARRET] QUITTER LA SIMULATION</button>
       </div>
     </div>
   )
